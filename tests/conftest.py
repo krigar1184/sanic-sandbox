@@ -10,7 +10,7 @@ def app(unused_port):
     app.config.from_object({
         'DB_NAME': 'test',
         'DB_USER': 'postgres',
-        'DB_HOST': 'localhost:8001'
+        'DB_HOST': 'localhost:5432'
     })
 
     app.add_route(main, '/')
