@@ -5,12 +5,12 @@ from app.routes import main
 
 
 @pytest.yield_fixture
-def app():
+def app(unused_port):
     app = Sanic('test_app')
     app.config.from_object({
         'DB_NAME': 'test',
         'DB_USER': 'postgres',
-        'DB_HOST': 'localhost:5432'
+        'DB_HOST': 'localhost:8001'
     })
 
     app.add_route(main, '/')
