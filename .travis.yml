@@ -2,14 +2,16 @@ language: python
 python:
   - "3.5"
   - "3.6"
-  - "3.7"
 services:
   - postgresql
 install:
   - pip install -r requirements.txt
 before_script:
-  - POSTGRES_DB=travis_ci_test psql -c 'create database $POSTGRES_DB;' -U postgres
+  - psql -c 'create database test;' -U postgres
 script:
   - python -m pytest --cov=tests/
 after_success:
   - codecov
+env:
+  global:
+    - PGPORT=8001
