@@ -1,0 +1,6 @@
+CONTENT_TYPE_JSON = 'application/json'
+CONTENT_TYPE_BINARY = 'application/octet-stream'
+ALLOWED_CONTENT_TYPES = (
+    CONTENT_TYPE_JSON,
+    CONTENT_TYPE_BINARY,
+)

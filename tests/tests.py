@@ -1,5 +1,7 @@
 import os
+import aiohttp
 import pytest
+import json
 
 
 def fin():
@@ -7,31 +9,26 @@ def fin():
         os.unlink(os.path.join('./media/storage', file))
 
 
-@pytest.mark.xfail
 async def test_json_success(app, test_cli):
     response = await test_cli.post(
         '/',
-        data={'url': 'http://localhost:8003/sample-image.jpeg'},
+        data=json.dumps({'url': 'http://www.cutestpaw.com/wp-content/uploads/2016/02/The-very-dangerous-cat-bear..jpg'}),
         headers={'content-type': 'application/json'})
 
-    try:
-        assert response.status == 201
-    except AssertionError:
-        data = await response.json()
-        print(data['error'])
+    assert response.status == 201
 
     data = await response.json()
     assert data == {'success': True}
 
     async with app.pool.acquire() as conn:
-        count, *_ = await conn.fetchrow('select count(1) from resources')
+        path, count = await conn.fetchrow('''
+            select path, count(1)
+            from resources
+            group by path
+        ''')
+
         assert int(count) == 1
-
-        path, *_ = await conn.fetchrow('select path from resources limit 1')
-        assert path == 'json path'
-
-        assert os.path.exists('/storage/media')
-        assert len(os.listdir('/storage/media')) == 1
+        assert os.path.exists(os.path.abspath(path))
 
 
 async def test_multipart_success(request, app, test_cli):
@@ -42,23 +39,18 @@ async def test_multipart_success(request, app, test_cli):
         headers={'content-type': 'application/octet-stream'},
     )
 
+    assert response.status == 201
+
     data = await response.json()
-
-    try:
-        assert response.status == 201
-    except AssertionError:
-        print(data['error'])
-
     assert data == {'success': True}
 
     async with app.pool.acquire() as conn:
-        count, *_ = await conn.fetchrow('select count(1) from resources')
-        assert int(count) == 1
+        path, count = await conn.fetchrow('''
+            select path, count(1)
+            from resources
+            group by path
+        ''')
 
-        path, *_ = await conn.fetchrow('select path from resources limit 1')
-        assert path == 'binary path'
-
-        assert len(os.listdir('./media/storage/')) == 1
-        
-        path = os.listdir('./media/storage')[0]
-        assert open(os.path.join('./media/storage', path)).read() == 'This is a sample file.'
+    assert int(count) == 1
+    assert os.path.exists(os.path.abspath(path))
+    assert open(os.path.abspath(path)).read() == 'This is a sample file.'

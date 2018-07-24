@@ -29,7 +29,7 @@ def validate_request(request):
 
 
 def is_binary_request(request):
-    return True  # request.content_type == CONTENT_TYPE_BINARY
+    return request.content_type == CONTENT_TYPE_BINARY
 
 
 def is_json_request(request):
@@ -54,7 +54,7 @@ async def app(request, loop):
 
     app.pool = pool
 
-    async def main(request):
+    async def test_main(request):
         """
         The main route. Accepts POST requests with the following "Content-Type" headers:
         - application/json
@@ -75,19 +75,18 @@ async def app(request, loop):
             except Exception:
                 return json({'success': False, 'error': 'Failed to parse request body'}, 400)
         elif is_json_request(request):
-            data = await request.json()
+            data = request.load_json()
         else:
             return json({'success': False, 'error': 'Wrong content type'}, 400)
 
         try:
-            await save_resource(app.pool, 'binary', data)
+            await save_resource(app.pool, request.content_type, data)
         except Exception as e:
             return json({'success': False, 'error': str(e)}, 400)
 
         return json({'success': True}, 201)
 
-    
-    app.add_route(main, '/', methods=['POST'])
+    app.add_route(test_main, '/', methods=['POST'])
 
     yield app
 
