@@ -4,6 +4,12 @@ import pytest
 from sanic import Sanic
 from sanic.response import json
 from app.service import save_resource
+from app.utils import (
+    parse_raw_body,
+    validate_request,
+    is_binary_request,
+    is_json_request,
+)
 from app.constants import (
     CONTENT_TYPE_JSON,
     CONTENT_TYPE_BINARY,
@@ -14,26 +20,6 @@ TEST_DB_HOST = os.environ.get('TEST_DB_HOST', 'localhost')
 TEST_DB_PORT = os.environ.get('TEST_DB_PORT', 8002)
 TEST_DB_NAME = os.environ.get('TEST_DB_NAME', 'postgres')
 TEST_DB_USER = os.environ.get('TEST_DB_USER', 'postgres')
-
-
-def parse_raw_body(body):
-    return body.decode('utf8').split('\n\r\n')
-
-
-def is_content_type_allowed(content_type):
-    return True  # TODO content_type in ALLOWED_CONTENT_TYPES
-
-
-def validate_request(request):
-    assert is_content_type_allowed(request.content_type)
-
-
-def is_binary_request(request):
-    return request.content_type == CONTENT_TYPE_BINARY
-
-
-def is_json_request(request):
-    return request.content_type == CONTENT_TYPE_JSON
 
 
 @pytest.yield_fixture
@@ -80,7 +66,7 @@ async def app(request, loop):
             return json({'success': False, 'error': 'Wrong content type'}, 400)
 
         try:
-            await save_resource(app.pool, request.content_type, data)
+            await save_resource(app, request.content_type, data)
         except Exception as e:
             return json({'success': False, 'error': str(e)}, 400)
 

@@ -13,15 +13,17 @@ logging.basicConfig(
 logger = logging.getLogger(__file__)
 
 
-async def save_resource(connection_pool, content_type, data):
-    handler = await dispatch(content_type, connection_pool)
+async def save_resource(app, content_type, data):
+    handler = await dispatch(app, content_type)
     resource = Resource(data, handler=handler)
 
     return await resource.save()
 
 
-async def dispatch(content_type, connection_pool):
-    pool = connection_pool
+async def dispatch(app, content_type):
+    """
+    Chooses handler for a specific MIME-type
+    """
 
     async def handle_json(resource):
         data = resource.data
@@ -31,17 +33,12 @@ async def dispatch(content_type, connection_pool):
                 content = await response.read()
 
         path = await resource.save_to_storage(content)
-
-        async with pool.acquire() as conn:
-            await conn.execute('insert into resources(path) values ($1);', path)
+        await resource.save_to_db(app.pool, path)
 
     async def handle_binary(resource):
-        async with pool.acquire() as conn:
-            file = resource.data.encode('utf8')
-            path = await resource.save_to_storage(file)
-
-            async with conn.transaction():
-                await conn.execute('insert into resources(path) values ($1);', path)
+        file = resource.data.encode('utf8')
+        path = await resource.save_to_storage(file)
+        await resource.save_to_db(app.pool, path)
 
     type_handler_mapping = {
         CONTENT_TYPE_JSON: handle_json,
@@ -74,5 +71,6 @@ class Resource:
 
         return os.path.relpath(abspath)
 
-    async def save_to_db(self):
-        pass
+    async def save_to_db(self, connection_pool, path):
+        async with connection_pool.acquire() as conn:
+            await conn.execute('insert into resources(path) values ($1);', path)

@@ -1,10 +1,15 @@
-import os
-
 import asyncpg
 from sanic import Sanic
 
 from . import settings
 from sanic.response import json
+from app.service import save_resource
+from app.utils import (
+    parse_raw_body,
+    validate_request,
+    is_binary_request,
+    is_json_request,
+)
 
 
 app = Sanic()
@@ -28,10 +33,36 @@ async def before_server_start(app, loop):
 
 
 async def main(request):
-    from app.service import save_data
-    await save_data(app.pool, request.header['Content-Type'])
+    """
+    The main route. Accepts POST requests with the following "Content-Type" headers:
+    - application/json
+    - octet-stream
 
-    return json({"hello": '1'})
+    If the request has a json content type, then the request body should contain a "url" key
+    with the location from where the resource should be downloaded. In case of the octet-stream,
+    the binary data is considered a resource.
+    """
+    try:
+        validate_request(request)  # TODO move to middleware
+    except AssertionError:
+        return json({'success': False, 'error': 'Wrong content type'}, 400)
+
+    if is_binary_request(request):
+        try:
+            header, data, encoded_data = parse_raw_body(request.body)
+        except Exception:
+            return json({'success': False, 'error': 'Failed to parse request body'}, 400)
+    elif is_json_request(request):
+        data = request.load_json()
+    else:
+        return json({'success': False, 'error': 'Wrong content type'}, 400)
+
+    try:
+        await save_resource(app.pool, request.content_type, data)
+    except Exception as e:
+        return json({'success': False, 'error': str(e)}, 400)
+
+    return json({'success': True}, 201)
 
 app.add_route(main, '/', methods=['GET', 'POST'])
 
