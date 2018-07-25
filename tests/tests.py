@@ -1,5 +1,4 @@
 import os
-import aiohttp
 import pytest
 import json
 
@@ -9,6 +8,33 @@ def fin():
         os.unlink(os.path.join('./media/storage', file))
 
 
+async def test_wrong_mimetypes(app, test_cli):
+    response = await test_cli.post('/',
+        data={'test_file': open('./tests/media/sample-file', 'rb')},
+        headers={'content-type': 'application/unknown-mimetype'},
+    )
+
+    assert response.status == 400
+    data = await response.json()
+    assert data['success'] == False
+    assert data['error'] == 'Wrong content type'
+
+
+async def test_no_url(app, test_cli):
+    response = await test_cli.post('/',
+        data=json.dumps({'not_url': 'some_text}'}),
+        headers={'content-type': 'application/json'})
+
+    assert response.status == 400
+    data = await response.json()
+    assert data['success'] == False
+    assert data['error'] == 'No "url" in data'
+
+
+@pytest.mark.xpass("""
+TODO this test depends on the internet connection,
+better request resource from a local server
+""")
 async def test_json_success(app, test_cli):
     response = await test_cli.post(
         '/',

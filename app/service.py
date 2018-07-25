@@ -27,6 +27,7 @@ async def dispatch(app, content_type):
 
     async def handle_json(resource):
         data = resource.data
+        assert 'url' in data, 'No "url" in data'
 
         async with aiohttp.ClientSession() as session:
             async with session.get(data['url']) as response:

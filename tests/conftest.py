@@ -4,6 +4,12 @@ import pytest
 from sanic import Sanic
 from sanic.response import json
 from app.service import save_resource
+from app.settings import (
+    TEST_DB_HOST,
+    TEST_DB_PORT,
+    TEST_DB_NAME,
+    TEST_DB_USER,
+)
 from app.utils import (
     parse_raw_body,
     validate_request,
@@ -16,21 +22,9 @@ from app.constants import (
 )
 
 
-TEST_DB_HOST = os.environ.get('TEST_DB_HOST', 'localhost')
-TEST_DB_PORT = os.environ.get('TEST_DB_PORT', 8002)
-TEST_DB_NAME = os.environ.get('TEST_DB_NAME', 'postgres')
-TEST_DB_USER = os.environ.get('TEST_DB_USER', 'postgres')
-
-
 @pytest.yield_fixture
 async def app(request, loop):
     app = Sanic('test_app')
-    app.config.from_object({
-        'DB_NAME': 'postgres',
-        'DB_USER': 'postgres',
-        'DB_HOST': 'localhost:8001',
-    })
-
     pool = await asyncpg.create_pool(dsn='postgresql://{}@{}:{}/{}'.format(
         TEST_DB_USER,
         TEST_DB_HOST,
@@ -74,7 +68,7 @@ async def app(request, loop):
 
     app.add_route(test_main, '/', methods=['POST'])
 
-    yield app
+    return app
 
 
 @pytest.fixture(autouse=True)

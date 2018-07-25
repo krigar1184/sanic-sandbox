@@ -18,7 +18,13 @@ app.config.from_object(settings)
 
 async def register_db(app):
     port = settings.DB_PORT
-    app.pool = await asyncpg.create_pool(dsn='postgresql://postgres@{}:{}/postgres'.format(settings.DB_HOST, port))
+    conn_string = 'postgresql://{}@{}:{}/{}'.format(
+        settings.DB_USER,
+        settings.DB_HOST,
+        settings.DB_PORT,
+        settings.DB_USER,
+    )
+    app.pool = await asyncpg.create_pool(conn_string)
     async with app.pool.acquire() as conn:
         await conn.execute("""create table if not exists resources (
             id serial primary key,
@@ -58,11 +64,12 @@ async def main(request):
         return json({'success': False, 'error': 'Wrong content type'}, 400)
 
     try:
-        await save_resource(app.pool, request.content_type, data)
+        await save_resource(app, request.content_type, data)
     except Exception as e:
         return json({'success': False, 'error': str(e)}, 400)
 
     return json({'success': True}, 201)
+
 
 app.add_route(main, '/', methods=['GET', 'POST'])
 
