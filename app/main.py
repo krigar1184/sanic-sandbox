@@ -18,10 +18,9 @@ app.config.from_object(settings)
 
 async def register_db(app):
     port = settings.DB_PORT
-    conn_string = 'postgresql://{}@{}:{}/{}'.format(
+    conn_string = 'postgresql://{}@{}/{}'.format(
         settings.DB_USER,
         settings.DB_HOST,
-        settings.DB_PORT,
         settings.DB_USER,
     )
     app.pool = await asyncpg.create_pool(conn_string)

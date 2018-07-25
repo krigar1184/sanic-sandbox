@@ -33,12 +33,6 @@ services:
       DB_PORT: 5432
     volumes:
       - test_data:/var/lib/postgresql/test_data
-    ports:
-      - 5432:8002
-  test_web:
-    image: nginx
-    ports:
-      - 80:8003
 volumes:
   data:
   test_data:

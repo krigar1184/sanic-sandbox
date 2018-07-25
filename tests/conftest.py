@@ -25,10 +25,9 @@ from app.constants import (
 @pytest.yield_fixture
 async def app(request, loop):
     app = Sanic('test_app')
-    pool = await asyncpg.create_pool(dsn='postgresql://{}@{}:{}/{}'.format(
+    pool = await asyncpg.create_pool(dsn='postgresql://{}@{}/{}'.format(
         TEST_DB_USER,
         TEST_DB_HOST,
-        TEST_DB_PORT,
         TEST_DB_NAME,
     ))
 
