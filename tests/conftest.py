@@ -6,7 +6,6 @@ from sanic.response import json
 from app.service import save_resource
 from app.settings import (
     TEST_DB_HOST,
-    TEST_DB_PORT,
     TEST_DB_NAME,
     TEST_DB_USER,
 )

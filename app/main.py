@@ -17,7 +17,6 @@ app.config.from_object(settings)
 
 
 async def register_db(app):
-    port = settings.DB_PORT
     conn_string = 'postgresql://{}@{}/{}'.format(
         settings.DB_USER,
         settings.DB_HOST,

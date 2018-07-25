@@ -2,6 +2,7 @@ version: '2'
 services:
   web:
     build: .
+    container_name: main
     ports:
       - "8000:8000"
     depends_on:
@@ -12,7 +13,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
       TEST_DB_HOST: test_db
-      TEST_DB_PORT: 5432
+      TEST_DB_PORT: 8002
       TEST_DB_USER: postgres
       TEST_DB_NAME: test_db
   db:
@@ -27,6 +28,8 @@ services:
   test_db:
     image: postgres
     restart: always
+    ports:
+        - "8002:5432"
     environment:
       POSTGRES_DB: test_db
       DB_HOST: db
