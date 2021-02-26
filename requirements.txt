@@ -1,5 +1,5 @@
 aiofiles==0.3.2
-aiohttp==3.3.2
+aiohttp==3.7.4
 async-generator==1.9
 async-timeout==3.0.0
 asyncpg==0.17.0
