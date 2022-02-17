@@ -20,7 +20,7 @@ pytest==3.6.3
 pytest-cov==2.5.1
 pytest-sanic==0.1.12
 requests==2.19.1
-sanic==0.7.0
+sanic==20.12.6
 six==1.11.0
 ujson==1.35
 urllib3==1.24.2
